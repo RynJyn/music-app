@@ -10,7 +10,14 @@ Route::get('/', function () {
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register')
     ]);
-});
+})->name('home');
+
+Route::get('/search', function() {
+    return Inertia::render('Search', [
+        'canLogin' => Route::has('login'),
+        'canRegister' => Route::has('register')
+    ]);
+})->name('search');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
