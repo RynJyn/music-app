@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
         User::factory()->create([
             'name' => env('LOCAL_SEED_NAME'),
             'email' => env('LOCAL_SEED_EMAIL'),
+            'password' => env('LOCAL_SEED_PASSWORD')
         ]);
     }
 }
