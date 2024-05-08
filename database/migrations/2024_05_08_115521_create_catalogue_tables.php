@@ -25,7 +25,7 @@ return new class extends Migration
             $table->string("art");
             $table->dateTime("released");
             $table->integer("artist_id")->unsigned();
-            $table->foreign("artist_id")->references("id")->on("artists");
+            $table->foreign("artist_id")->references("id")->on("artists")->cascadeOnDelete();
         });
 
         Schema::create('tracks', function (Blueprint $table) {
@@ -34,7 +34,7 @@ return new class extends Migration
             $table->string("duration");
             $table->string("filename");
             $table->integer("album_id")->unsigned();
-            $table->foreign("album_id")->references("id")->on("albums");
+            $table->foreign("album_id")->references("id")->on("albums")->cascadeOnDelete();
         });
     }
 
