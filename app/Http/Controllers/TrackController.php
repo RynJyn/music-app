@@ -6,6 +6,7 @@ use App\Models\Track;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
+use Illuminate\Database\Eloquent\Builder;
 
 class TrackController extends Controller
 {
@@ -47,5 +48,23 @@ class TrackController extends Controller
         $track->delete();
 
         return Redirect::route('admin.tracks');
+    }
+
+    public function single(Request $request){
+        $request->validate([
+            'id' => "required|integer|exists:App\Models\Track,id",
+            'artist' => "boolean",
+            'album' => "boolean"
+        ]);
+
+        $album = $request->input('album');
+        $artist = $request->input('artist');
+
+        $result = Track::when($album, function(Builder $query, bool $album){
+            $query->with('album');
+        })->when($artist, function(Builder $query, bool $artist){
+            $query->with('artist');
+        })->find($request->input('id'), ['filename', 'album_id']);
+        return response()->json($result);
     }
 }
