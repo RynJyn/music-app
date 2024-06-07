@@ -17,7 +17,11 @@ class Track extends Model
         'album_id'
     ];
 
-    public function albums(){
-        return $this->belongsTo(Album::class);
+    public function album(){
+        return $this->belongsTo(Album::class, 'album_id');
+    }
+
+    public function artist(){
+        return $this->hasOneThrough(Artist::class, Album::class, 'id', 'id', 'album_id', 'artist_id');
     }
 }

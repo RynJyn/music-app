@@ -20,7 +20,7 @@ class Album extends Model
     ];
 
     public function artist(){
-        return $this->belongsTo(Artist::class);
+        return $this->belongsTo(Artist::class, 'artist_id');
     }
 
     public function tracks(){

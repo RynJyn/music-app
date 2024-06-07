@@ -20,4 +20,8 @@ class Artist extends Model
     public function albums(){
         return $this->hasMany(Album::class);
     }
+
+    public function tracks(){
+        return $this->hasManyThrough(Track::class, Album::class);
+    }
 }
