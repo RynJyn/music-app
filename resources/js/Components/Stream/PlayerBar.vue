@@ -1,94 +1,86 @@
 <script setup>
-/***TODO
- * Investigate computed components (may be good for duration variable)
- * Investigate watchers
- */
+import Timestamp from '../ui/Timestamp.vue';
+import PlayPause from '../ui/PlayPause.vue';
+import MuteButton from '@/Components/Stream/MuteButton.vue';
+import Slider from '../ui/Slider.vue';
+import { Link } from '@inertiajs/vue3';
+import { usePlayerStore } from '@/stores/player';
+
+const player = usePlayerStore();
+const imgStore = import.meta.env.VITE_LOCAL_IMAGE_STORE;
 </script>
 
 <template>
     <div id="player-bar">
-        <audio id="audio" ref="audio" controls v-on:loadedmetadata="updateAudioInfo" v-on:timeupdate="setCurrentTime" style="display:none;">
-            <source src="example.mp3" type="audio/mpeg" >
-        </audio>
-        <button type="button" v-on:click="setIsPlaying">{{ audioState.isPlaying ? "Pause" : "Play" }}</button>
-        <div id="track-progress">
-            <div id="current-time" class="track-info">{{ formatTime(currentTime) }}</div>
-            <input type="range" id="seek" v-on:input="setSeek" v-model="audioState.seek" min="0" max="100" step="1"/>
-            <div id="track-duration" class="track-info">{{ formatTime(duration) }}</div>
+        <div id="current-track">
+            <img :src="player.currentTrack.album.art.search('http') !== -1 ? player.currentTrack.album.art : (imgStore + player.currentTrack.album.art)" height="100" width="100"/>
+            <div id="current-track-info">
+                <p>{{ player.currentTrack.title }}</p>
+                <Link :href="route('artist', {id: player.currentTrack.artist.id})">{{ player.currentTrack.artist.name }}</Link>
+            </div>
+        </div>
+        <div class="track-controls">
+            <div class="audio-controls">
+                <PlayPause :onClick="player.toggle" :isPlaying="player.isPlaying" id="audio-playpause"/>
+            </div>
+            <div id="track-progress">
+                <div id="current-time" class="track-info"><Timestamp :seconds="player.currentTime"/></div>
+                <Slider id="seek" :onInput="function(e){player.setSeek(e.target.value)}" min="0" max="100" step="1" :value="player.seek"></Slider>
+                <div id="track-duration" class="track-info"><Timestamp :seconds="player.duration"/></div>
+            </div>
         </div>
         <div id="volume-controls">
-            <button id="mute" type="button" v-on:click="()=>{audioState.isMuted = !audioState.isMuted}">{{ audioState.isMuted ? "Unmute" : "Mute" }}</button>
-            <input type="range" id="volume" min="0" max="100" step="1" v-on:input="setVolume" v-model="volume"/>
+            <MuteButton :onClick="()=>{player.toggleMute()}" :volume="player.volume" :isMuted="player.isMuted"/>
+            <Slider id="volume" :onInput="function(e){player.setVolume(e.target.value)}" :value="player.volume"></Slider>
         </div>
     </div>
 </template>
 
-<script>
-export default {
-    props: {
-        audioState: {
-            trackId: String,
-            volume: Number,
-            isMuted: Boolean,
-            //currentTime: Number,
-            seek: Number,
-            isPlaying: Boolean
-        }
-    },
-    data() {
-        return {
-            currentTime: 0,
-            duration: 0,
-            volume: 100
-        }
-    },
-    mounted() {
-        this.audioEl = document.querySelector('audio#audio');
-    },
-    methods: {
-        setCurrentTime(e){
-            this.currentTime = e.target.currentTime;
-            this.audioState.seek = ((this.currentTime / this.duration) * 100);
-            return true;
-        },
-        setSeek(e){
-            this.audioEl.currentTime = this.audioEl.duration * (e.target.value/100);
-        },
-        setIsPlaying(){
-            this.audioState.isPlaying = !this.audioState.isPlaying;
-            if(this.audioEl.paused) {
-                this.audioEl.play();
-            } else {
-                this.audioEl.pause();
-            }
-        },
-        updateAudioInfo(e){
-            this.currentTime = e.target.currentTime;
-            this.duration = e.target.duration;
-        },
-        setVolume(e){
-            this.volume = e.target.value;
-            this.audioEl.volume = (this.volume/100);
-        },
-        formatTime(duration) {
-            const hours = String(Math.floor(duration / 3600)).padStart(2, '0');
-            const minutes = String(Math.floor(duration % 3600 / 60)).padStart(2, '0');
-            const seconds = String(Math.floor(duration % 3600 % 60)).padStart(2, '0');
-            return `${hours !== "00" ? hours + ':' : ''}${minutes}:${seconds}`;
-        }
-    }
-}
-</script>
-
 <style>
 div#player-bar {
-    background: #000;
+    background: #0c1118;
     position: fixed;
     bottom: 0;
     width: 100%;
     padding: 1em 0.5em;
     display: flex;
     justify-content: space-between;
+    align-items: center;
+}
+
+div#current-track{
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+}
+
+div#current-track-info{
+    display: flex;
+    flex-direction: column;
+}
+
+div#current-track-info a:hover{
+    text-decoration: underline;
+}
+
+div.track-controls{
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    align-items: center;
+}
+
+div#player-bar button#audio-playpause{
+    background: transparent;
+    height: 24px;
+    width: 24px;
+}
+
+div#player-bar button#audio-playpause svg{
+    height: 100%;
+    width: 100%;
+    fill: #eee;
 }
 
 div#track-progress {
@@ -101,33 +93,19 @@ div.track-info {
     color: #fff;
 }
 
-input#seek {
-    appearance: none;
+#seek {
     height: 15px;
     width: 300px;
-    background: #fff;
-    border-radius: 25px;
 }
 
-input#seek::-webkit-slider-thumb {
-    appearance: none;
-    cursor: pointer;
-    background: burlywood;
-    height: 20px;
-    width: 20px;
-    border-radius: 50%;
+#volume {
+    height: 15px;
+    width: 150px;
 }
 
-input#seek::-moz-range-thumb { 
-    appearance: none;
-    cursor: pointer;
-    background: blue;
-    height: 20px;
-    width: 20px;
-    border-radius: 50%;
-}
-
-div#player-bar button {
-    background: #fff;
+div#volume-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.3em;
 }
 </style>
